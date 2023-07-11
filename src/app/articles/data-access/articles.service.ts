@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ApiService } from "../../shared/data-access/api.service";
 import { Article } from "../../shared/interfaces/article";
 import { FormControl } from "@angular/forms";
+import { Subject, retry } from "rxjs";
 
 export interface ArticlesState {
   articles: Article[];
@@ -44,7 +45,17 @@ export class ArticlesService {
   });
 
   // sources
-  articlesLoaded$ = this.apiService.articles$;
+  retry$ = new Subject<void>();
+  error$ = new Subject<Error>();
+  articlesLoaded$ = this.apiService.articlesFail$.pipe(
+    retry({
+      delay: (err) => {
+        this.error$.next(err);
+        return this.retry$;
+      },
+    })
+  );
+
   filter$ = this.filterControl.valueChanges;
 
   constructor() {
@@ -61,6 +72,20 @@ export class ArticlesService {
       this.state.update((state) => ({
         ...state,
         filter: filter === "" ? null : filter,
+      }))
+    );
+
+    this.retry$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() =>
+        this.state.update((state) => ({ ...state, status: "loading" }))
+      );
+
+    this.error$.pipe(takeUntilDestroyed()).subscribe((error) =>
+      this.state.update((state) => ({
+        ...state,
+        status: "error",
+        error: error.message,
       }))
     );
   }

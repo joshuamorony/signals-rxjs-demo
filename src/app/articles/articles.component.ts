@@ -17,7 +17,7 @@ import { PaginationComponent } from "./ui/pagination.component";
       <p *ngIf="service.status() === 'loading'">Loading...</p>
       <div *ngIf="service.status() === 'error'">
         <p>{{ service.error() }}</p>
-        <button>Retry</button>
+        <button (click)="service.retry$.next()">Retry</button>
       </div>
     </div>
 
