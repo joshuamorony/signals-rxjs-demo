@@ -10,8 +10,8 @@ import { PaginationComponent } from "./ui/pagination.component";
   selector: "app-articles",
   providers: [ArticlesService],
   template: `
-    <!-- <app-search /> -->
-    <app-list [articles]="service.articles()" />
+    <app-search [control]="service.filterControl" />
+    <app-list [articles]="service.filteredArticles()" />
 
     <div class="status">
       <p *ngIf="service.status() === 'loading'">Loading...</p>

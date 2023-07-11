@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ApiService } from "../../shared/data-access/api.service";
 import { Article } from "../../shared/interfaces/article";
+import { FormControl } from "@angular/forms";
 
 export interface ArticlesState {
   articles: Article[];
@@ -23,6 +24,8 @@ export class ArticlesService {
     currentPage: 1,
   });
 
+  filterControl = new FormControl();
+
   // selectors
   articles = computed(() => this.state().articles);
   filter = computed(() => this.state().filter);
@@ -30,8 +33,19 @@ export class ArticlesService {
   status = computed(() => this.state().status);
   currentPage = computed(() => this.state().currentPage);
 
+  filteredArticles = computed(() => {
+    const filter = this.filter();
+
+    return filter
+      ? this.articles().filter((article) =>
+          article.title.toLowerCase().includes(filter.toLowerCase())
+        )
+      : this.articles();
+  });
+
   // sources
   articlesLoaded$ = this.apiService.articles$;
+  filter$ = this.filterControl.valueChanges;
 
   constructor() {
     // reducers
@@ -40,6 +54,13 @@ export class ArticlesService {
         ...state,
         articles,
         status: "success",
+      }))
+    );
+
+    this.filter$.pipe(takeUntilDestroyed()).subscribe((filter) =>
+      this.state.update((state) => ({
+        ...state,
+        filter: filter === "" ? null : filter,
       }))
     );
   }
