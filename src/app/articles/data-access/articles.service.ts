@@ -67,7 +67,7 @@ export class ArticlesService {
 
   constructor() {
     // reducers
-        this.articlesForPage$.pipe(takeUntilDestroyed()).subscribe((articles) =>
+    this.articlesForPage$.pipe(takeUntilDestroyed()).subscribe((articles) =>
       this.state.update((state) => ({
         ...state,
         articles,
@@ -78,9 +78,13 @@ export class ArticlesService {
     this.currentPage$
       .pipe(takeUntilDestroyed())
       .subscribe((currentPage) =>
-        this.state.update((state) => ({ ...state, currentPage, status: "loading", articles: [] }))
+        this.state.update((state) => ({
+          ...state,
+          currentPage,
+          status: "loading",
+          articles: [],
+        }))
       );
-
 
     this.filter$.pipe(takeUntilDestroyed()).subscribe((filter) =>
       this.state.update((state) => ({
