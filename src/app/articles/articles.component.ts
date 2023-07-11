@@ -11,7 +11,7 @@ import { PaginationComponent } from "./ui/pagination.component";
   providers: [ArticlesService],
   template: `
     <!-- <app-search /> -->
-    <app-list [articles]="[]" />
+    <app-list [articles]="service.articles()" />
 
     <div class="status">
       <p *ngIf="service.status() === 'loading'">Loading...</p>

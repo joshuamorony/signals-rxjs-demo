@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ApiService } from "../../shared/data-access/api.service";
 import { Article } from "../../shared/interfaces/article";
 
@@ -30,7 +31,16 @@ export class ArticlesService {
   currentPage = computed(() => this.state().currentPage);
 
   // sources
+  articlesLoaded$ = this.apiService.articles$;
 
   constructor() {
+    // reducers
+    this.articlesLoaded$.pipe(takeUntilDestroyed()).subscribe((articles) =>
+      this.state.update((state) => ({
+        ...state,
+        articles,
+        status: "success",
+      }))
+    );
   }
 }
