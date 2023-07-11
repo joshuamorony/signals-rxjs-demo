@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ApiService } from "../../shared/data-access/api.service";
 import { Article } from "../../shared/interfaces/article";
 import { FormControl } from "@angular/forms";
-import { Subject, retry } from "rxjs";
+import { Subject, retry, startWith, switchMap } from "rxjs";
 
 export interface ArticlesState {
   articles: Article[];
@@ -47,26 +47,40 @@ export class ArticlesService {
   // sources
   retry$ = new Subject<void>();
   error$ = new Subject<Error>();
-  articlesLoaded$ = this.apiService.articlesFail$.pipe(
-    retry({
-      delay: (err) => {
-        this.error$.next(err);
-        return this.retry$;
-      },
-    })
+  currentPage$ = new Subject<number>();
+
+  articlesForPage$ = this.currentPage$.pipe(
+    startWith(1),
+    switchMap((page) =>
+      this.apiService.getArticlesByPage(page).pipe(
+        retry({
+          delay: (err) => {
+            this.error$.next(err);
+            return this.retry$;
+          },
+        })
+      )
+    )
   );
 
   filter$ = this.filterControl.valueChanges;
 
   constructor() {
     // reducers
-    this.articlesLoaded$.pipe(takeUntilDestroyed()).subscribe((articles) =>
+        this.articlesForPage$.pipe(takeUntilDestroyed()).subscribe((articles) =>
       this.state.update((state) => ({
         ...state,
         articles,
         status: "success",
       }))
     );
+
+    this.currentPage$
+      .pipe(takeUntilDestroyed())
+      .subscribe((currentPage) =>
+        this.state.update((state) => ({ ...state, currentPage, status: "loading", articles: [] }))
+      );
+
 
     this.filter$.pipe(takeUntilDestroyed()).subscribe((filter) =>
       this.state.update((state) => ({

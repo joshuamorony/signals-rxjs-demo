@@ -21,7 +21,10 @@ import { PaginationComponent } from "./ui/pagination.component";
       </div>
     </div>
 
-    <app-pagination [currentPage]="1" />
+    <app-pagination
+      [currentPage]="service.currentPage()"
+      (pageChange)="service.currentPage$.next($event)"
+    />
   `,
   imports: [ListComponent, SearchComponent, PaginationComponent, CommonModule],
   styles: [
