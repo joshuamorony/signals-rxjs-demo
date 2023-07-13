@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import { delay, of, switchMap, throwError } from "rxjs";
+import { mapHttpResultToServerResponse } from "../data-access-utils/data-access.utils";
 import { Article } from "../interfaces/article";
 
 @Injectable({
@@ -25,27 +26,35 @@ export class ApiService {
     },
   ];
 
-  articles$ = of(this.articles).pipe(delay(1000));
+  articles$ = of(this.articles)
+    .pipe(delay(1000))
+    .pipe(mapHttpResultToServerResponse());
   articlesFail$ = of(this.articles).pipe(
     delay(1000),
     switchMap(() =>
       Math.random() < 0.8
         ? throwError(() => new Error("Oops"))
         : of(this.articles)
-    )
+    ),
+    mapHttpResultToServerResponse()
   );
 
-  getArticlesByPage(page: number) {
-    const articles = this.articles.map((article) => ({
-      ...article,
-      title: `Page ${page}: ${article.title}`,
-    }));
+  getArticlesByPageAndFilter(page: number, filter: string) {
+    const articles: Article[] = this.articles
+      .filter((article) =>
+        article.title.toLowerCase().includes(filter.toLowerCase())
+      )
+      .map((article) => ({
+        ...article,
+        title: `Page ${page}: ${article.title}`,
+      }));
 
     return of(articles).pipe(
       delay(1000),
       switchMap(() =>
         Math.random() < 0.5 ? throwError(() => new Error("Oops")) : of(articles)
-      )
+      ),
+      mapHttpResultToServerResponse()
     );
   }
 }

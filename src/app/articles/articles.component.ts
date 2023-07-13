@@ -10,14 +10,24 @@ import { PaginationComponent } from "./ui/pagination.component";
   selector: "app-articles",
   providers: [ArticlesService],
   template: `
-    <app-search [control]="service.filterControl" />
-    <app-list [articles]="service.filteredArticles()" />
+    <div class="search-bar">
+      <app-search [control]="service.filterControl" />
+      <button
+        class="refresh"
+        (click)="service.refresh$.next()"
+        title="Refresh and search for new entries"
+      >
+        🔄
+      </button>
+    </div>
+
+    <app-list [articles]="service.articles()" />
 
     <div class="status">
-      <p *ngIf="service.status() === 'loading'">Loading...</p>
-      <div *ngIf="service.status() === 'error'">
+      <p *ngIf="service.status() === 'LOADING'">Loading...</p>
+      <div *ngIf="service.status() === 'ERROR'">
         <p>{{ service.error() }}</p>
-        <button (click)="service.retry$.next()">Retry</button>
+        <button (click)="service.refresh$.next()">Retry</button>
       </div>
     </div>
 
@@ -40,6 +50,21 @@ import { PaginationComponent } from "./ui/pagination.component";
         flex-direction: column;
         margin-bottom: 2rem;
         align-items: center;
+      }
+
+      .search-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .search-bar app-search {
+        flex-grow: 1;
+      }
+
+      .refresh {
+        font-size: 24px;
+        padding: 0.75rem;
       }
     `,
   ],
